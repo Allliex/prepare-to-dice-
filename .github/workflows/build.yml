@@ -1,0 +1,47 @@
+name: Собрать APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.7'
+
+      - name: Сборка
+        run: gradle assembleRelease --no-daemon
+
+      - name: Переименовать APK
+        run: cp app/build/outputs/apk/release/app-release.apk DnD-Dice.apk
+
+      - name: Сохранить как артефакт сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: DnD-Dice-apk
+          path: DnD-Dice.apk
+
+      - name: Опубликовать в Releases (постоянная ссылка)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: Кубы D&D
+          body: Скачай DnD-Dice.apk и открой его на телефоне Android.
+          make_latest: true
+          files: DnD-Dice.apk
